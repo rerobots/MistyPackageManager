@@ -1,0 +1,8 @@
+*~
+*.pyc
+*.egg-info
+mpm/_version.py
+/dist/
+.tox
+.coverage
+cover/
