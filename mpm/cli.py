@@ -21,6 +21,12 @@ def main(argv=None):
     argparser.add_argument('-V', '--version', dest='print_version',
                            action='store_true', default=False,
                            help='print version number and exit.')
+
+    subparsers = argparser.add_subparsers(dest='command')
+    new_parser = subparsers.add_parser('new', help='create a new (empty) skill')
+    new_parser.add_argument('NAME', help='name of the skill')
+    build_parser = subparsers.add_parser('build', help='create bundle ready for upload to Misty robot')
+
     args = argparser.parse_args(argv)
     if args.print_version:
         print(__version__)
