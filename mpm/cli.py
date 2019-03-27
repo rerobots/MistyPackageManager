@@ -8,7 +8,11 @@ Copyright (c) 2019 rerobots, Inc.
 from __future__ import absolute_import
 from __future__ import print_function
 import argparse
+import json
+import os
+import os.path
 import sys
+import uuid
 
 from .__init__ import __version__
 
@@ -99,10 +103,38 @@ def main(argv=None):
         if args.print_init_help:
             init_parser.print_help()
             return 0
+
+        # Preconditions
+        skillmeta_path = os.path.join('src', '{}.json'.format(args.NAME))
+        if os.path.exists(skillmeta_path):
+            print('ERROR: cannot initialize '
+                  'because path already exists: {}'.format(skillmeta_path))
+            return 1
+        mainjs_path = os.path.join('src', '{}.js'.format(args.NAME))
+        if os.path.exists(mainjs_path):
+            print('ERROR: cannot initialize '
+                  'because path already exists: {}'.format(mainjs_path))
+            return 1
+
         skillmeta = {
             'Name': args.NAME,
+            'UniqueId': str(uuid.uuid4()),
+            'Description': '',
+            'StartupRules': ['Manual', 'Robot'],
+            'Language': 'javascript',
+            'BroadcastMode': 'verbose',
+            'TimeoutInSeconds': 60,
+            'CleanupOnCancel': True,
+            'WriteToLog': False,
         }
-        # TODO
+
+        # Write results
+        if not os.path.exists('src'):
+            os.mkdir('src')
+        with open(skillmeta_path, 'wt') as fp:
+            json.dump(skillmeta, fp, indent=2)
+        with open(mainjs_path, 'wt') as fp:
+            pass
 
     elif args.command == 'build':
         if args.print_build_help:
