@@ -6,3 +6,4 @@ mpm/_version.py
 .tox
 .coverage
 cover/
+/src/
