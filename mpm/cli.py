@@ -167,7 +167,10 @@ def main(argv=None):
             print('ERROR: no meta file found in src/')
             return 1
 
-        zipout_path = '{}.zip'.format(skillname)
+        # Write results
+        if not os.path.exists('dist'):
+            os.mkdir('dist')
+        zipout_path = os.path.join('dist', '{}.zip'.format(skillname))
         if os.path.exists(zipout_path):
             print('WARNING: destination file {} already exits. overwriting...'.format(zipout_path))
         zp = zipfile.ZipFile(zipout_path, mode='w')
