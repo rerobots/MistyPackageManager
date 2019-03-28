@@ -8,11 +8,13 @@ Copyright (c) 2019 rerobots, Inc.
 from __future__ import absolute_import
 from __future__ import print_function
 import argparse
+import glob
 import json
 import os
 import os.path
 import sys
 import uuid
+import zipfile
 
 from .__init__ import __version__
 
@@ -140,7 +142,38 @@ def main(argv=None):
         if args.print_build_help:
             build_parser.print_help()
             return 0
-        # TODO
+
+        # Preconditions
+        candidate_metafiles = glob.glob(os.path.join('src', '*.json'))
+        candidate_metafiles += glob.glob(os.path.join('src', '*.JSON'))
+
+        skillname = None
+        for candidate_metafile in candidate_metafiles:
+            candidate_skillname = os.path.basename(candidate_metafile)
+            if candidate_skillname.endswith('.json') or candidate_skillname.endswith('.JSON'):
+                candidate_skillname = candidate_skillname[:-len('.json')]
+            else:
+                continue
+            candidate_mainjsfile = os.path.join('src', '{}.js'.format(candidate_skillname))
+            if not os.path.exists(candidate_mainjsfile):
+                candidate_mainjsfile = os.path.join('src', '{}.JS'.format(candidate_skillname))
+                if not os.path.exists(candidate_mainjsfile):
+                    continue
+            skillname = candidate_skillname
+            skillmeta_path = candidate_metafile
+            mainjs_path = candidate_mainjsfile
+            break
+        if skillname is None:
+            print('ERROR: no meta file found in src/')
+            return 1
+
+        zipout_path = '{}.zip'.format(skillname)
+        if os.path.exists(zipout_path):
+            print('WARNING: destination file {} already exits. overwriting...')
+        zp = zipfile.ZipFile(zipout_path, mode='w')
+        zp.write(skillmeta_path, arcname='{}.json'.format(skillname))
+        zp.write(mainjs_path, arcname='{}.js'.format(skillname))
+        zp.close()
 
     else:
         print('Unrecognized command. Try `--help`.')
