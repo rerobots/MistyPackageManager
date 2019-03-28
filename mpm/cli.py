@@ -169,7 +169,7 @@ def main(argv=None):
 
         zipout_path = '{}.zip'.format(skillname)
         if os.path.exists(zipout_path):
-            print('WARNING: destination file {} already exits. overwriting...')
+            print('WARNING: destination file {} already exits. overwriting...'.format(zipout_path))
         zp = zipfile.ZipFile(zipout_path, mode='w')
         zp.write(skillmeta_path, arcname='{}.json'.format(skillname))
         zp.write(mainjs_path, arcname='{}.js'.format(skillname))
