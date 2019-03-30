@@ -44,6 +44,14 @@ def main(argv=None):
                              action='store_true', default=False,
                              help='print this help message and exit')
 
+    config_parser = subparsers.add_parser('config', help='manage local configuration', add_help=False)
+    config_parser.add_argument('-h', '--help', dest='print_config_help',
+                               action='store_true', default=False,
+                               help='print this help message and exit')
+    config_parser.add_argument('--ping', dest='config_ping',
+                               action='store_true', default=False,
+                               help='check that Misty robot can be reached')
+
     subparsers.add_parser('version', help='print version number and exit.', add_help=False)
     help_parser = subparsers.add_parser('help', help='print this help message and exit', add_help=False)
     help_parser.add_argument('help_target_command', metavar='COMMAND', type=str, nargs='?')
@@ -94,6 +102,8 @@ def main(argv=None):
                 init_parser.print_help()
             elif args.help_target_command == 'build':
                 build_parser.print_help()
+            elif args.help_target_command == 'config':
+                config_parser.print_help()
             else:
                 print('Unrecognized command. Try `--help`.')
                 return 1
@@ -177,6 +187,11 @@ def main(argv=None):
         zp.write(skillmeta_path, arcname='{}.json'.format(skillname))
         zp.write(mainjs_path, arcname='{}.js'.format(skillname))
         zp.close()
+
+    elif args.command == 'config':
+        if args.print_config_help:
+            config_parser.print_help()
+            return 0
 
     else:
         print('Unrecognized command. Try `--help`.')
