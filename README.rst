@@ -1,10 +1,19 @@
 Misty Package Manager (mpm)
 ===========================
 
-Abstract
---------
+Getting Started
+---------------
 
-package (skill) manager for Misty
+Create an empty skill named "demo"::
+
+  mpm init demo
+
+The resulting JavaScript (JS) file and meta file are in the directory src/. When
+ready, create a bundle::
+
+  mpm build
+
+and upload ``dist/demo.zip`` to a Misty robot.
 
 
 Participating
