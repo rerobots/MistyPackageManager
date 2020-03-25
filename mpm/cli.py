@@ -16,6 +16,8 @@ import sys
 import uuid
 import zipfile
 
+import requests
+
 from .__init__ import __version__
 from . import config
 
@@ -49,6 +51,9 @@ def main(argv=None):
     config_parser.add_argument('-h', '--help', dest='print_config_help',
                                action='store_true', default=False,
                                help='print this help message and exit')
+    config_parser.add_argument('--addr', dest='config_addr',
+                               default=None, metavar='ADDRESS',
+                               help='declare address of Misty robot')
     config_parser.add_argument('--ping', dest='config_ping',
                                action='store_true', default=False,
                                help='check that Misty robot can be reached')
@@ -194,11 +199,33 @@ def main(argv=None):
             config_parser.print_help()
             return 0
         cfg = config.load(init_if_missing=True)
-        out = config.pprint(cfg)
-        if len(out) == 0:
-            print('(empty)')
+        if args.config_addr:
+            cfg['addr'] = args.config_addr
+            config.save(cfg)
+        if args.config_ping:
+            addr = cfg.get('addr')
+            if addr is None:
+                print('ERROR: Misty address is not known!')
+                print('add it using `mpm config --addr`')
+                return 1
+            if not addr.startswith('http'):
+                addr = 'http://' + addr
+            try:
+                pong = requests.get(addr + '/api/battery').ok
+            except requests.exceptions.ConnectionError:
+                pong = False
+            if pong:
+                print('success!')
+                return 0
+            else:
+                print('failed to ping the Misty robot!')
+                return 1
         else:
-            print(out)
+            out = config.pprint(cfg)
+            if len(out) == 0:
+                print('(empty)')
+            else:
+                print(out)
 
     else:
         print('Unrecognized command. Try `--help`.')

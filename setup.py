@@ -52,6 +52,8 @@ setup(name='mpm',
                    'Programming Language :: Python :: 3.7',
                    'Programming Language :: Python :: 3.8'],
       packages=['mpm'],
-      install_requires=[],
+      install_requires=[
+          'requests',
+      ],
       entry_points={'console_scripts': ['mpm = mpm.cli:main']}
       )
