@@ -17,6 +17,7 @@ import uuid
 import zipfile
 
 from .__init__ import __version__
+from . import config
 
 
 def main(argv=None):
@@ -192,6 +193,12 @@ def main(argv=None):
         if args.print_config_help:
             config_parser.print_help()
             return 0
+        cfg = config.load(init_if_missing=True)
+        out = config.pprint(cfg)
+        if len(out) == 0:
+            print('(empty)')
+        else:
+            print(out)
 
     else:
         print('Unrecognized command. Try `--help`.')
