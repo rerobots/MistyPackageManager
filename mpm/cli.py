@@ -62,6 +62,12 @@ def main(argv=None):
     help_parser = subparsers.add_parser('help', help='print this help message and exit', add_help=False)
     help_parser.add_argument('help_target_command', metavar='COMMAND', type=str, nargs='?')
 
+    mversion_help = 'print (YAML format) identifiers and version numbers of Misty robot and exit.'
+    mversion_parser = subparsers.add_parser('mistyversion', help=mversion_help, add_help=False)
+    mversion_parser.add_argument('-h', '--help', dest='print_config_help',
+                                 action='store_true', default=False,
+                                 help='print this help message and exit')
+
     # Workaround for Python 2.7 argparse, which does not accept empty COMMAND:
     # If `--help` or `-h` present and every argument before it begins with `-`,
     # then convert it to `help`.
@@ -110,6 +116,8 @@ def main(argv=None):
                 build_parser.print_help()
             elif args.help_target_command == 'config':
                 config_parser.print_help()
+            elif args.help_target_command == 'mistyversion':
+                mversion_parser.print_help()
             else:
                 print('Unrecognized command. Try `--help`.')
                 return 1
@@ -226,6 +234,32 @@ def main(argv=None):
                 print('(empty)')
             else:
                 print(out)
+
+    elif args.command == 'mistyversion':
+        cfg = config.load()
+        addr = cfg.get('addr')
+        if not addr.startswith('http'):
+            addr = 'http://' + addr
+        try:
+            devinfo = requests.get(addr + '/api/device').json()
+        except requests.exceptions.ConnectionError:
+            print('failed to connect to the Misty robot!')
+            print('check connection with `mpm config --ping`')
+            return 1
+        if devinfo['status'] != 'Success':
+            print('Misty returned failure status: {}'.format(devinfo['status']))
+            return 1
+        devinfo = devinfo['result']
+        print('sku:', devinfo['sku'])
+        print('serial number:', devinfo['serialNumber'])
+        print('robotId:', devinfo['robotId'])
+        for k in ['robotVersion', 'sensoryServiceAppVersion', 'androidOSVersion', 'windowsOSVersion']:
+            print('{}: {}'.format(k, devinfo[k]))
+        hardware_info = devinfo['hardwareInfo']
+        for k in hardware_info:
+            print('{}:'.format(k))
+            for subk in hardware_info[k]:
+                print('    {}: {}'.format(subk, hardware_info[k][subk]))
 
     else:
         print('Unrecognized command. Try `--help`.')
