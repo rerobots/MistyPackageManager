@@ -61,15 +61,15 @@ def main(argv=None):
                                action='store_true', default=False,
                                help='check that Misty robot can be reached')
 
-    subparsers.add_parser('version', help='print version number and exit.', add_help=False)
-    help_parser = subparsers.add_parser('help', help='print this help message and exit', add_help=False)
-    help_parser.add_argument('help_target_command', metavar='COMMAND', type=str, nargs='?')
-
     mversion_help = 'print (YAML format) identifiers and version numbers of Misty robot and exit.'
     mversion_parser = subparsers.add_parser('mistyversion', description=mversion_help, help=mversion_help, add_help=False)
     mversion_parser.add_argument('-h', '--help', dest='print_config_help',
                                  action='store_true', default=False,
                                  help='print this help message and exit')
+
+    subparsers.add_parser('version', help='print version number and exit.', add_help=False)
+    help_parser = subparsers.add_parser('help', help='print this help message and exit', add_help=False)
+    help_parser.add_argument('help_target_command', metavar='COMMAND', type=str, nargs='?')
 
     # Workaround for Python 2.7 argparse, which does not accept empty COMMAND:
     # If `--help` or `-h` present and every argument before it begins with `-`,
