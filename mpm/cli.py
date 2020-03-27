@@ -36,18 +36,21 @@ def main(argv=None):
 
     subparsers = argparser.add_subparsers(dest='command')
 
-    init_parser = subparsers.add_parser('init', help='create a new (empty) skill', add_help=False)
+    init_help = 'create a new (empty) skill'
+    init_parser = subparsers.add_parser('init', description=init_help, help=init_help, add_help=False)
     init_parser.add_argument('NAME', help='name of the skill')
     init_parser.add_argument('-h', '--help', dest='print_init_help',
                              action='store_true', default=False,
                              help='print this help message and exit')
 
-    build_parser = subparsers.add_parser('build', help='create bundle ready for upload to Misty robot', add_help=False)
+    build_help = 'create bundle ready for upload to Misty robot'
+    build_parser = subparsers.add_parser('build', description=build_help, help=build_help, add_help=False)
     build_parser.add_argument('-h', '--help', dest='print_build_help',
                              action='store_true', default=False,
                              help='print this help message and exit')
 
-    config_parser = subparsers.add_parser('config', help='manage local configuration', add_help=False)
+    config_help = 'manage local configuration'
+    config_parser = subparsers.add_parser('config', description=config_help, help=config_help, add_help=False)
     config_parser.add_argument('-h', '--help', dest='print_config_help',
                                action='store_true', default=False,
                                help='print this help message and exit')
@@ -63,7 +66,7 @@ def main(argv=None):
     help_parser.add_argument('help_target_command', metavar='COMMAND', type=str, nargs='?')
 
     mversion_help = 'print (YAML format) identifiers and version numbers of Misty robot and exit.'
-    mversion_parser = subparsers.add_parser('mistyversion', help=mversion_help, add_help=False)
+    mversion_parser = subparsers.add_parser('mistyversion', description=mversion_help, help=mversion_help, add_help=False)
     mversion_parser.add_argument('-h', '--help', dest='print_config_help',
                                  action='store_true', default=False,
                                  help='print this help message and exit')
