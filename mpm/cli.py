@@ -63,7 +63,7 @@ def main(argv=None):
 
     mversion_help = 'print (YAML format) identifiers and version numbers of Misty robot and exit.'
     mversion_parser = subparsers.add_parser('mistyversion', description=mversion_help, help=mversion_help, add_help=False)
-    mversion_parser.add_argument('-h', '--help', dest='print_config_help',
+    mversion_parser.add_argument('-h', '--help', dest='print_mversion_help',
                                  action='store_true', default=False,
                                  help='print this help message and exit')
 
@@ -239,6 +239,9 @@ def main(argv=None):
                 print(out)
 
     elif args.command == 'mistyversion':
+        if args.print_mversion_help:
+            mversion_parser.print_help()
+            return 0
         cfg = config.load()
         addr = cfg.get('addr')
         if not addr.startswith('http'):
