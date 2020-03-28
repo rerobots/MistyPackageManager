@@ -242,6 +242,7 @@ def main(argv=None):
             else:
                 print('failed to ping the Misty robot!')
                 return 1
+
         else:
             out = config.pprint(cfg)
             if len(out) == 0:
