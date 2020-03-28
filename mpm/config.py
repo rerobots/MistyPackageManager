@@ -5,6 +5,7 @@ SCL <scott@rerobots.net>
 Copyright (c) 2020 rerobots, Inc.
 """
 import configparser
+import os
 import os.path
 
 
@@ -12,6 +13,13 @@ def _path_or_default(path=None):
     if path is None:
         path = os.path.join(os.path.expanduser('~'), '.mistypackagemanager')
     return path
+
+
+def delete(path=None):
+    path = _path_or_default(path)
+    if not os.path.exists(path):
+        return
+    os.unlink(path)
 
 
 def load(path=None, init_if_missing=False):

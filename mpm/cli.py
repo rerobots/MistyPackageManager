@@ -60,6 +60,9 @@ def main(argv=None):
     config_parser.add_argument('--ping', dest='config_ping',
                                action='store_true', default=False,
                                help='check that Misty robot can be reached')
+    config_parser.add_argument('--rm', dest='delete_config',
+                               action='store_true', default=False,
+                               help='delete local configuration data')
 
     mversion_help = 'print (YAML format) identifiers and version numbers of Misty robot and exit.'
     mversion_parser = subparsers.add_parser('mistyversion', description=mversion_help, help=mversion_help, add_help=False)
@@ -209,6 +212,14 @@ def main(argv=None):
         if args.print_config_help:
             config_parser.print_help()
             return 0
+        if args.delete_config:
+            try:
+                config.delete()
+            except Exception as e:
+                print('Failed to remove configuration: {}'.format(e))
+                return 1
+            return 0
+
         cfg = config.load(init_if_missing=True)
         if args.config_addr:
             cfg['addr'] = args.config_addr
