@@ -98,6 +98,16 @@ def main(argv=None):
                                action='store_true', default=False,
                                help='print this help message and exit')
 
+    start_help = 'start execution of skill on Misty robot'
+    start_parser = subparsers.add_parser('skillstart', description=start_help, help=start_help, add_help=False)
+    start_parser.add_argument('start_ID', metavar='ID', default=None, nargs='?',
+                              help=('uniqueId of skill to start on robot; '
+                                    'if none given, and only 1 skill is on robot, '
+                                    'then start it.'))
+    start_parser.add_argument('-h', '--help', dest='print_start_help',
+                              action='store_true', default=False,
+                              help='print this help message and exit')
+
     mversion_help = 'print (YAML format) identifiers and version numbers of Misty robot and exit.'
     mversion_parser = subparsers.add_parser('mistyversion', description=mversion_help, help=mversion_help, add_help=False)
     mversion_parser.add_argument('-h', '--help', dest='print_mversion_help',
@@ -164,6 +174,8 @@ def main(argv=None):
                 upload_parser.print_help()
             elif args.help_target_command == 'remove':
                 remove_parser.print_help()
+            elif args.help_target_command == 'skillstart':
+                start_parser.print_help()
             elif args.help_target_command == 'mistyversion':
                 mversion_parser.print_help()
             else:
@@ -393,6 +405,49 @@ def main(argv=None):
             return 1
         if not res.ok:
             print('failed to remove skill {} from robot'.format(remove_ID))
+            return 1
+
+    elif args.command == 'skillstart':
+        if args.print_start_help:
+            start_parser.print_help()
+            return 0
+        cfg = config.load()
+        addr = cfg.get('addr')
+        if not addr.startswith('http'):
+            addr = 'http://' + addr
+        if args.start_ID is None:
+            try:
+                slist = requests.get(addr + '/api/skills').json()
+            except requests.exceptions.ConnectionError:
+                print('failed to connect to the Misty robot!')
+                print('check connection with `mpm config --ping`')
+                return 1
+            if slist['status'] != 'Success':
+                print('Misty returned failure status: {}'.format(slist['status']))
+                return 1
+            slist = slist['result']
+            if len(slist) == 0:
+                print('no skills on the robot; nothing to start.')
+                print('try uploading a skill using `mpm upload`')
+                return 1
+            if len(slist) > 1:
+                print('more than 1 skill on the robot!')
+                print('specify which skill to start explicitly in `mpm start ID`')
+                return 1
+            start_ID = slist[0]['uniqueId']
+        else:
+            start_ID = args.start_ID
+
+        try:
+            res = requests.post(addr + '/api/skills/start', json={
+                'Skill': start_ID,
+            })
+        except requests.exceptions.ConnectionError:
+            print('failed to connect to the Misty robot!')
+            print('check connection with `mpm config --ping`')
+            return 1
+        if not res.ok:
+            print('failed to start skill {} on robot'.format(start_ID))
             return 1
 
     elif args.command == 'mistyversion':
