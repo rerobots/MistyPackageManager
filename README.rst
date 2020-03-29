@@ -4,6 +4,10 @@ Misty Package Manager (mpm)
 Getting Started
 ---------------
 
+Install ``mpm`` as a `Python package <https://pypi.org/project/mpm/>`_::
+
+  pip install mpm
+
 Create an empty skill named "demo"::
 
   mpm init demo
