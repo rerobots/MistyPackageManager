@@ -16,6 +16,12 @@ import sys
 import uuid
 import zipfile
 
+# Backwards-compatibility with Python 2.7
+try:
+    input = raw_input
+except NameError:
+    pass
+
 import requests
 
 from .__init__ import __version__
@@ -229,6 +235,10 @@ def main(argv=None):
             config_parser.print_help()
             return 0
         if args.delete_config:
+            print('Do you want to delete all local configuration data? [y/N]')
+            decision = input()
+            if decision.lower() not in ['y', 'yes']:
+                return 1
             try:
                 config.delete()
             except Exception as e:
