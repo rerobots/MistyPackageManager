@@ -76,6 +76,28 @@ def main(argv=None):
                                action='store_true', default=False,
                                help='delete local configuration data')
 
+    list_help = 'list skills currently on Misty robot'
+    list_parser = subparsers.add_parser('list', description=list_help, help=list_help, add_help=False)
+    list_parser.add_argument('-h', '--help', dest='print_list_help',
+                              action='store_true', default=False,
+                              help='print this help message and exit')
+
+    upload_help = 'upload skill to Misty robot'
+    upload_parser = subparsers.add_parser('upload', description=upload_help, help=upload_help, add_help=False)
+    upload_parser.add_argument('-h', '--help', dest='print_upload_help',
+                              action='store_true', default=False,
+                              help='print this help message and exit')
+
+    remove_help = 'remove skill from Misty robot'
+    remove_parser = subparsers.add_parser('remove', description=remove_help, help=remove_help, add_help=False)
+    remove_parser.add_argument('remove_ID', metavar='ID', default=None, nargs='?',
+                               help=('uniqueId of skill to remove from robot; '
+                                     'if none given, and only 1 skill is on robot, '
+                                     'then remove it.'))
+    remove_parser.add_argument('-h', '--help', dest='print_remove_help',
+                               action='store_true', default=False,
+                               help='print this help message and exit')
+
     mversion_help = 'print (YAML format) identifiers and version numbers of Misty robot and exit.'
     mversion_parser = subparsers.add_parser('mistyversion', description=mversion_help, help=mversion_help, add_help=False)
     mversion_parser.add_argument('-h', '--help', dest='print_mversion_help',
@@ -136,6 +158,12 @@ def main(argv=None):
                 clean_parser.print_help()
             elif args.help_target_command == 'config':
                 config_parser.print_help()
+            elif args.help_target_command == 'list':
+                list_parser.print_help()
+            elif args.help_target_command == 'upload':
+                upload_parser.print_help()
+            elif args.help_target_command == 'remove':
+                remove_parser.print_help()
             elif args.help_target_command == 'mistyversion':
                 mversion_parser.print_help()
             else:
@@ -275,6 +303,97 @@ def main(argv=None):
                 print('(empty)')
             else:
                 print(out)
+
+    elif args.command == 'list':
+        if args.print_list_help:
+            list_parser.print_help()
+            return 0
+        cfg = config.load()
+        addr = cfg.get('addr')
+        if not addr.startswith('http'):
+            addr = 'http://' + addr
+        try:
+            slist = requests.get(addr + '/api/skills').json()
+        except requests.exceptions.ConnectionError:
+            print('failed to connect to the Misty robot!')
+            print('check connection with `mpm config --ping`')
+            return 1
+        if slist['status'] != 'Success':
+            print('Misty returned failure status: {}'.format(slist['status']))
+            return 1
+        slist = slist['result']
+        for skilldata in slist:
+            print('{}  {}'.format(skilldata['uniqueId'], skilldata['name']))
+
+    elif args.command == 'upload':
+        if args.print_upload_help:
+            upload_parser.print_help()
+            return 0
+        dist_files = glob.glob(os.path.join('dist', '*'))
+        if len(dist_files) > 1:
+            print('ERROR: more than one file under dist/')
+            print('perhaps `mpm clean`, then `mpm build` again')
+            return 1
+        fp = open(dist_files[0], 'rb')
+        cfg = config.load()
+        addr = cfg.get('addr')
+        if not addr.startswith('http'):
+            addr = 'http://' + addr
+        try:
+            res = requests.request(method='POST', url=addr + '/api/skills', files={
+                'File': (dist_files[0], fp, 'application/zip'),
+                'ImmediatelyApply': (None, 'false'),
+                'OverwriteExisting': (None, 'true'),
+            })
+        except requests.exceptions.ConnectionError:
+            print('failed to connect to the Misty robot!')
+            print('check connection with `mpm config --ping`')
+            return 1
+        fp.close()
+        if not res.ok:
+            print('failed to upload skill to robot')
+            return 1
+        print(res.text)
+
+    elif args.command == 'remove':
+        if args.print_remove_help:
+            remove_parser.print_help()
+            return 0
+        cfg = config.load()
+        addr = cfg.get('addr')
+        if not addr.startswith('http'):
+            addr = 'http://' + addr
+        if args.remove_ID is None:
+            try:
+                slist = requests.get(addr + '/api/skills').json()
+            except requests.exceptions.ConnectionError:
+                print('failed to connect to the Misty robot!')
+                print('check connection with `mpm config --ping`')
+                return 1
+            if slist['status'] != 'Success':
+                print('Misty returned failure status: {}'.format(slist['status']))
+                return 1
+            slist = slist['result']
+            if len(slist) == 0:
+                print('no skills on the robot; nothing to remove.')
+                return 1
+            if len(slist) > 1:
+                print('more than 1 skill on the robot!')
+                print('specify which skill to remove explicitly in `mpm remove ID`')
+                return 1
+            remove_ID = slist[0]['uniqueId']
+        else:
+            remove_ID = args.remove_ID
+
+        try:
+            res = requests.delete(addr + '/api/skills?Skill={}'.format(remove_ID))
+        except requests.exceptions.ConnectionError:
+            print('failed to connect to the Misty robot!')
+            print('check connection with `mpm config --ping`')
+            return 1
+        if not res.ok:
+            print('failed to remove skill {} from robot'.format(remove_ID))
+            return 1
 
     elif args.command == 'mistyversion':
         if args.print_mversion_help:
