@@ -22,6 +22,8 @@ Participating
 All participation must follow our code of conduct, elaborated in the file
 CODE_OF_CONDUCT.md in the same directory as this README.
 
+The source code repository is available at https://github.com/rerobots/MistyPackageManager
+
 
 License
 -------
