@@ -13,6 +13,7 @@ import json
 import os
 import os.path
 import sys
+import time
 import uuid
 import zipfile
 
@@ -26,6 +27,25 @@ import requests
 
 from .__init__ import __version__
 from . import config
+
+
+def _get_logs(addr):
+    try:
+        logs_resp = requests.get(addr + '/api/logs')
+    except requests.exceptions.ConnectionError:
+        print('failed to connect to the Misty robot!')
+        print('check connection with `mpm config --ping`')
+        return None
+    if not logs_resp.ok:
+        print('failed to connect to the Misty robot!')
+        print('check connection with `mpm config --ping`')
+        return None
+    logs_resp = logs_resp.json()
+    if logs_resp['status'] != 'Success':
+        print('Misty returned failure status: {}'.format(logs_resp['status']))
+        return None
+    raw_logdump = logs_resp['result']
+    return [l for l in raw_logdump.split('\r\n') if l]
 
 
 def main(argv=None):
@@ -108,6 +128,15 @@ def main(argv=None):
                               action='store_true', default=False,
                               help='print this help message and exit')
 
+    log_help = 'print logs from Misty robot'
+    log_parser = subparsers.add_parser('log', description=log_help, help=log_help, add_help=False)
+    log_parser.add_argument('-h', '--help', dest='print_log_help',
+                            action='store_true', default=False,
+                            help='print this help message and exit')
+    log_parser.add_argument('-f', dest='config_logfollow',
+                            action='store_true', default=False,
+                            help='follow logs, print changes incrementally')
+
     mversion_help = 'print (YAML format) identifiers and version numbers of Misty robot and exit.'
     mversion_parser = subparsers.add_parser('mistyversion', description=mversion_help, help=mversion_help, add_help=False)
     mversion_parser.add_argument('-h', '--help', dest='print_mversion_help',
@@ -176,6 +205,8 @@ def main(argv=None):
                 remove_parser.print_help()
             elif args.help_target_command == 'skillstart':
                 start_parser.print_help()
+            elif args.help_target_command == 'log':
+                log_parser.print_help()
             elif args.help_target_command == 'mistyversion':
                 mversion_parser.print_help()
             else:
@@ -449,6 +480,30 @@ def main(argv=None):
         if not res.ok:
             print('failed to start skill {} on robot'.format(start_ID))
             return 1
+
+    elif args.command == 'log':
+        if args.print_log_help:
+            log_parser.print_help()
+            return 0
+        cfg = config.load()
+        addr = cfg.get('addr')
+        if not addr.startswith('http'):
+            addr = 'http://' + addr
+        logs = _get_logs(addr)
+        if logs is None:
+            return 1
+        print('\n'.join(logs))
+        if args.config_logfollow:
+            try:
+                while True:
+                    time.sleep(1)
+                    nlogs = _get_logs(addr)
+                    diff = nlogs.index(logs[-1]) + 1
+                    nlogs = nlogs[diff:]
+                    print('\n'.join(nlogs))
+                    logs = nlogs
+            except KeyboardInterrupt:
+                pass
 
     elif args.command == 'mistyversion':
         if args.print_mversion_help:
