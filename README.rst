@@ -13,11 +13,19 @@ Create an empty skill named "demo"::
   mpm init demo
 
 The resulting JavaScript (JS) file and meta file are in the directory src/. When
-ready, create a bundle::
+ready, create a bundle and upload it to a Misty robot::
 
   mpm build
+  mpm upload
 
-and upload ``dist/demo.zip`` to a Misty robot.
+If not configured already, ``upload`` will fail because the robot address is not
+known.  Enter the address of the robot with ``mpm config``. For example, ::
+
+  mpm config --addr 192.168.1.30
+
+(Change ``192.168.1.30`` as needed.) Start to execute the skill::
+
+  mpm skillstart
 
 
 Participating
