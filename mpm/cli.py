@@ -289,7 +289,14 @@ def main(argv=None):
 
         if args.compress_source:
             newpath = mainjs_path[:-2] + 'min.js'
-            rc = subprocess.call(['uglifyjs', '-o', newpath, mainjs_path])
+            try:
+                rc = subprocess.call(['uglifyjs', '-o', newpath, mainjs_path])
+            except OSError:
+                print('ERROR: error calling uglifyjs. Is it installed?')
+                return 1
+            if rc != 0:
+                print('ERROR: failed to compress source file: {}'.format(mainjs_path))
+                return rc
             mainjs_path = newpath
 
         # Write results
