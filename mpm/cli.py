@@ -12,6 +12,7 @@ import glob
 import json
 import os
 import os.path
+import subprocess
 import sys
 import time
 import uuid
@@ -71,6 +72,10 @@ def main(argv=None):
 
     build_help = 'create bundle ready for upload to Misty robot'
     build_parser = subparsers.add_parser('build', description=build_help, help=build_help, add_help=False)
+    build_parser.add_argument('--compress', dest='compress_source',
+                              action='store_true', default=False,
+                              help=('compress source code using uglify-js '
+                                    '(https://github.com/mishoo/UglifyJS2)'))
     build_parser.add_argument('-h', '--help', dest='print_build_help',
                              action='store_true', default=False,
                              help='print this help message and exit')
@@ -281,6 +286,11 @@ def main(argv=None):
         if skillname is None:
             print('ERROR: no meta file found in src/')
             return 1
+
+        if args.compress_source:
+            newpath = mainjs_path[:-2] + 'min.js'
+            rc = subprocess.call(['uglifyjs', '-o', newpath, mainjs_path])
+            mainjs_path = newpath
 
         # Write results
         if not os.path.exists('dist'):
