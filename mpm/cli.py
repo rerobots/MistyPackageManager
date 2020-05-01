@@ -531,7 +531,11 @@ def main(argv=None):
         if not addr.startswith('http'):
             addr = 'http://' + addr
         try:
-            devinfo = requests.get(addr + '/api/device').json()
+            res = requests.get(addr + '/api/device')
+            if not res.ok:
+                print('failed to connect to the Misty robot!')
+                return 1
+            devinfo = res.json()
         except requests.exceptions.ConnectionError:
             print('failed to connect to the Misty robot!')
             print('check connection with `mpm config --ping`')
