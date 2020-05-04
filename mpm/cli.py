@@ -12,6 +12,7 @@ import glob
 import json
 import os
 import os.path
+import random
 import subprocess
 import sys
 import time
@@ -25,6 +26,9 @@ except NameError:
     pass
 
 import requests
+
+# inline:
+#   websocket    if `mpm logskill`
 
 from .__init__ import __version__
 from . import config
@@ -142,6 +146,12 @@ def main(argv=None):
                             action='store_true', default=False,
                             help='follow logs, print changes incrementally')
 
+    logskill_help = 'stream logs from skill via SkillData WebSocket'
+    logskill_parser = subparsers.add_parser('logskill', description=logskill_help, help=logskill_help, add_help=False)
+    logskill_parser.add_argument('-h', '--help', dest='print_logskill_help',
+                                 action='store_true', default=False,
+                                 help='print this help message and exit')
+
     mversion_help = 'print (YAML format) identifiers and version numbers of Misty robot and exit.'
     mversion_parser = subparsers.add_parser('mistyversion', description=mversion_help, help=mversion_help, add_help=False)
     mversion_parser.add_argument('-h', '--help', dest='print_mversion_help',
@@ -212,6 +222,8 @@ def main(argv=None):
                 start_parser.print_help()
             elif args.help_target_command == 'log':
                 log_parser.print_help()
+            elif args.help_target_command == 'logskill':
+                logskill_parser.print_help()
             elif args.help_target_command == 'mistyversion':
                 mversion_parser.print_help()
             else:
@@ -521,6 +533,44 @@ def main(argv=None):
                     logs = nlogs
             except KeyboardInterrupt:
                 pass
+
+
+    elif args.command == 'logskill':
+        if args.print_logskill_help:
+            logskill_parser.print_help()
+            return 0
+
+        import websocket
+
+        cfg = config.load()
+        addr = cfg.get('addr')
+        if addr.startswith('http:'):
+            addr = 'ws:' + addr[5:]
+        elif addr.startswith('https:'):
+            addr = 'wss:' + addr[6:]
+        elif not addr.startswith('http'):
+            addr = 'ws://' + addr
+
+        def on_open(ws):
+            ws.send(json.dumps({
+                'Operation': 'subscribe',
+                'Type': 'SkillData',
+                'DebounceMS': None,
+                'EventName': 'SkillData{}'.format(random.randint(0,1000)),
+                'Message': '',
+                'ReturnProperty': None,
+            }))
+
+        def on_error(ws, err):
+            print('error:', msg)
+
+        def on_message(ws, msg):
+            x = json.loads(msg)
+            print(x['message'])
+
+        ws = websocket.WebSocketApp(addr + '/pubsub', on_open=on_open, on_message=on_message, on_error=on_error)
+        ws.run_forever(ping_interval=15)
+
 
     elif args.command == 'mistyversion':
         if args.print_mversion_help:
